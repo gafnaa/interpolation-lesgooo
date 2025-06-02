@@ -47,7 +47,7 @@ export default function HomePage() {
   const [minX, setMinX] = useState<number>(-10);
   const [maxX, setMaxX] = useState<number>(10);
   const [minY, setMinY] = useState<number>(-10);
-  const [maxY, setMaxY] = useState<number>(10);
+  const [maxY, setMyY] = useState<number>(10); // Perbaikan typo, sebelumnya maxY
 
   const dragThreshold = 10;
 
@@ -78,9 +78,44 @@ export default function HomePage() {
       setInterpFormula("P(x) = (Belum ada/cukup titik)");
     } else if (lineCreated) {
       setLineCreated(false);
+      // Memicu pembuatan garis ulang setelah titik dihapus jika garis sudah ada
       setTimeout(() => setLineCreated(true), 0);
     }
   };
+
+  // NEW: Fungsi untuk mengubah nilai titik secara manual
+  const handleChangePoint = (
+    indexToChange: number,
+    axis: "x" | "y",
+    value: string
+  ) => {
+    // Memastikan nilai adalah angka dan tidak kosong
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) && value !== "") {
+      // Jika input bukan angka dan bukan string kosong, jangan lakukan apa-apa
+      return;
+    }
+
+    setPoints((prevPoints) =>
+      prevPoints.map((point, index) =>
+        index === indexToChange
+          ? { ...point, [axis]: isNaN(numValue) ? 0 : numValue } // Set ke 0 jika kosong
+          : point
+      )
+    );
+
+    // Jika garis sudah dibuat, picu update garis setelah perubahan titik
+    if (lineCreated) {
+      setLineCreated(false);
+      setTimeout(() => setLineCreated(true), 0);
+    }
+  };
+
+  // Perbaikan typo untuk setMaxY (sebelumnya setMyY)
+  const setMaxY = (value: number) => {
+    setMyY(value); // Gunakan setMyY yang sudah ada
+  };
+
 
   return (
     <div className="flex justify-center items-start min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-2 sm:p-4 md:p-6 lg:p-8">
@@ -115,12 +150,12 @@ export default function HomePage() {
           <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg text-sm text-blue-800 dark:text-blue-300 flex items-center gap-2">
             <Info className="h-4 w-4 flex-shrink-0" />
             <span>
-              Klik di kanvas untuk menambah titik baru. Tarik titik yang ada untuk memindahkannya.
+              **Tips:** Klik di kanvas untuk menambah titik baru. Tarik titik yang ada untuk memindahkannya.
             </span>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap justify-center gap-3 w-full"> {/* Menggunakan flex-wrap dan justify-center */}
+          <div className="flex flex-wrap justify-center gap-3 w-full">
             <Button
               onClick={handleClearPoints}
               variant="outline"
@@ -137,7 +172,7 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <Separator className="my-2 bg-gray-200 dark:bg-gray-700" /> {/* Pemisah yang lebih elegan */}
+          <Separator className="my-2 bg-gray-200 dark:bg-gray-700" />
 
           {/* Section for Coordinate Settings, Interpolation Settings, and Points List */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full justify-items-center">
@@ -256,21 +291,45 @@ export default function HomePage() {
                     Belum ada titik. Klik pada kanvas untuk menambah.
                   </p>
                 ) : (
-                  <ScrollArea className="h-[200px] sm:h-[250px] lg:h-[300px] pr-2"> {/* Tinggi scrollarea lebih dinamis */}
+                  <ScrollArea className="h-[200px] sm:h-[250px] lg:h-[300px] pr-2">
                     <ul className="divide-y divide-gray-200 dark:divide-gray-600">
                       {points.map((p, index) => (
                         <li
                           key={index}
-                          className="flex justify-between items-center py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 rounded-md"
+                          className="flex flex-col sm:flex-row justify-between items-center py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 rounded-md gap-2"
                         >
-                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                            P{index + 1}: ({p.x.toFixed(2)}, {p.y.toFixed(2)})
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">
+                            P{index + 1}:
                           </span>
+                          <div className="flex gap-2 w-full sm:w-auto flex-grow justify-center">
+                            <div className="flex items-center gap-1">
+                                <label htmlFor={`point-${index}-x`} className="sr-only">X</label>
+                                <Input
+                                    id={`point-${index}-x`}
+                                    type="number"
+                                    value={p.x}
+                                    onChange={(e) => handleChangePoint(index, "x", e.target.value)}
+                                    className="w-20 text-center text-sm rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    step="0.01" // Opsional: Untuk kontrol yang lebih halus
+                                />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <label htmlFor={`point-${index}-y`} className="sr-only">Y</label>
+                                <Input
+                                    id={`point-${index}-y`}
+                                    type="number"
+                                    value={p.y}
+                                    onChange={(e) => handleChangePoint(index, "y", e.target.value)}
+                                    className="w-20 text-center text-sm rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    step="0.01" // Opsional: Untuk kontrol yang lebih halus
+                                />
+                            </div>
+                          </div>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleRemovePoint(index)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:text-red-400 dark:hover:bg-red-900/30 h-8 w-8 rounded-full"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:text-red-400 dark:hover:bg-red-900/30 h-8 w-8 rounded-full flex-shrink-0"
                             aria-label={`Hapus titik ${index + 1}`}
                           >
                             <Trash2 className="h-4 w-4" />
