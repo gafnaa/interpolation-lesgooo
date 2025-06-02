@@ -149,7 +149,7 @@ export function useCanvasDrawing({
   }, [canvasDims, minX, maxX, minY, maxY]);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const {
-    toCanvasX, toCanvasY, toDataX, toDataY,
+    toCanvasX, toCanvasY, toDataX,
     isValid: drawingParamsValid,
     dataXMin, dataXMax, dataYMin, dataYMax,
   } = drawingParams;
